@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnozomTask.InfraStructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250729082113_AddEstimateHoursToTaskItem")]
-    partial class AddEstimateHoursToTaskItem
+    [Migration("20250729111127_InitialCreation")]
+    partial class InitialCreation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -66,9 +66,14 @@ namespace EnozomTask.InfraStructure.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("TaskItems");
                 });
@@ -112,11 +117,11 @@ namespace EnozomTask.InfraStructure.Migrations
 
             modelBuilder.Entity("EnozomTask.Domain.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<string>("ClockifyId")
                         .HasColumnType("nvarchar(max)");
@@ -125,7 +130,7 @@ namespace EnozomTask.InfraStructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
                 });
@@ -137,6 +142,14 @@ namespace EnozomTask.InfraStructure.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EnozomTask.Domain.Entities.User", "AssignedUser")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedUser");
 
                     b.Navigation("Project");
                 });

@@ -18,6 +18,9 @@ namespace EnozomTask.Domain.Entities
 
         [Required]
         public int ProjectId { get; set; }
+        public int UserId { get; set; }
+        public User AssignedUser { get; set; }
+
 
         public double EstimateHours { get; set; }
 

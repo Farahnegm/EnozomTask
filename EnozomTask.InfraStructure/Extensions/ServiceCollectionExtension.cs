@@ -1,13 +1,13 @@
 ﻿
+using EnozomTask.Application.Services;
 using EnozomTask.Domain.Repositories;
 using EnozomTask.InfraStructure.Clockify;
 using EnozomTask.InfraStructure.persistence;
 using EnozomTask.InfraStructure.Repositories;
-using EnozomTask.InfraStructure.Seeders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Restaurants.Infrastructure.Seeders;
+
 
 namespace EnozomTask.InfraStructure.Extensions
 {
@@ -18,9 +18,17 @@ namespace EnozomTask.InfraStructure.Extensions
             var connectionString = configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString));
-            services.AddScoped<IDataSeeder, DataSeeder>();
-            services.AddScoped<IClockifyService, ClockifyService>();
+            
+            services.AddScoped<IClockifySyncService, ClockifySyncService>();
             services.Configure<ClockifySettings>(configuration.GetSection("Clockify"));
+            services.AddScoped<ITimeEntryOrchestrationService, TimeEntryOrchestrationService>();
+            services.AddScoped<IReportService, ReportService>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<ITaskItemRepository, TaskItemRepository>();
+            services.AddScoped<ITimeEntryRepository, TimeEntryRepository>();
+
             services.AddHttpClient();
         }
     }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnozomTask.InfraStructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initialCreation : Migration
+    public partial class InitialCreation : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,14 +29,14 @@ namespace EnozomTask.InfraStructure.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ClockifyId = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.UserId);
                 });
 
             migrationBuilder.CreateTable(
@@ -47,7 +47,9 @@ namespace EnozomTask.InfraStructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ClockifyId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ProjectId = table.Column<int>(type: "int", nullable: false)
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    EstimateHours = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -57,6 +59,12 @@ namespace EnozomTask.InfraStructure.Migrations
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TaskItems_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -92,7 +100,7 @@ namespace EnozomTask.InfraStructure.Migrations
                         name: "FK_TimeEntries_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
+                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -100,6 +108,11 @@ namespace EnozomTask.InfraStructure.Migrations
                 name: "IX_TaskItems_ProjectId",
                 table: "TaskItems",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaskItems_UserId",
+                table: "TaskItems",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeEntries_ProjectId",
@@ -127,10 +140,10 @@ namespace EnozomTask.InfraStructure.Migrations
                 name: "TaskItems");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Projects");
 
             migrationBuilder.DropTable(
-                name: "Projects");
+                name: "Users");
         }
     }
 }

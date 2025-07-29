@@ -6,7 +6,7 @@ namespace EnozomTask.Domain.Entities
 {
     public class User
     {
-        public int Id { get; set; }
+        public int UserId { get; set; }
 
         [Required]
         public string FullName { get; set; }

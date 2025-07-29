@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace EnozomTask.Domain.Repositories
 {
-    public class IUnitOfWork
+    public interface IUnitOfWork
     {
+        IUserRepository Users { get; }
+        IProjectRepository Projects { get; }
+        ITaskItemRepository TaskItems { get; }
+        ITimeEntryRepository TimeEntries { get; }
+        int SaveChanges();
+        Task<int> SaveChangesAsync();
     }
 }

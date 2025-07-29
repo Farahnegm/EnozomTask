@@ -3,7 +3,7 @@ using EnozomTask.InfraStructure.Clockify;
 using EnozomTask.InfraStructure.Extensions;
 using Restaurants.Api.Extensions;
 using Restaurants.Application.Extensions;
-using Restaurants.Infrastructure.Seeders;
+
 
 namespace EnozomTask
 {
@@ -20,18 +20,13 @@ namespace EnozomTask
             builder.AddPresentationServices();
             builder.Services.AddApplicationServices();
             builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
            
 
 
             var app = builder.Build();
 
-                
-            using (var scope = app.Services.CreateScope())
-            {
-                var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
-                seeder.SeedAsync().GetAwaiter().GetResult();
-            }
-
+            
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
