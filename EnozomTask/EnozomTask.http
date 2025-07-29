@@ -1,0 +1,6 @@
+@EnozomTask_HostAddress = http://localhost:5133
+
+GET {{EnozomTask_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
