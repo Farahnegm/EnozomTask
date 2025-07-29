@@ -38,11 +38,24 @@ namespace EnozomTask.Controllers
             // Load related project and assigned user for Clockify sync
             task.Project = await _unitOfWork.Projects.GetByIdAsync(task.ProjectId);
             task.AssignedUser = await _unitOfWork.Users.GetByIdAsync(task.UserId);
-            // Check if assigned user is in Clockify
-            if (string.IsNullOrEmpty(task.AssignedUser?.ClockifyId))
+            // Check if assigned user has a valid ClockifyId
+            bool hasValidClockifyId = !string.IsNullOrEmpty(task.AssignedUser?.ClockifyId) && 
+                                     task.AssignedUser.ClockifyId.Length == 24 && 
+                                     System.Text.RegularExpressions.Regex.IsMatch(task.AssignedUser.ClockifyId, "^[0-9a-fA-F]{24}$");
+            
+            if (!hasValidClockifyId)
             {
                 var result = _mapper.Map<TaskItemReadDto>(task);
-                return Ok(new { task = result, message = "Task saved locally. User not in Clockify - task not synced to Clockify." });
+                return Ok(new { 
+                    task = result, 
+                    assignee = task.AssignedUser != null ? new AssigneeDto
+                    {
+                        UserId = task.AssignedUser.UserId,
+                        FullName = task.AssignedUser.FullName,
+                        ClockifyId = task.AssignedUser.ClockifyId
+                    } : null,
+                    message = "Task saved locally. User has invalid or missing ClockifyId - task not synced to Clockify." 
+                });
             }
             var clockifyId = await _clockifySyncService.SyncTaskItemAsync(task);
             if (!string.IsNullOrEmpty(clockifyId))
@@ -52,7 +65,16 @@ namespace EnozomTask.Controllers
                 await _unitOfWork.SaveChangesAsync();
             }
             var finalResult = _mapper.Map<TaskItemReadDto>(task);
-            return Ok(new { task = finalResult, message = "Task saved locally and synced to Clockify." });
+            return Ok(new { 
+                task = finalResult, 
+                assignee = new AssigneeDto
+                {
+                    UserId = task.AssignedUser.UserId,
+                    FullName = task.AssignedUser.FullName,
+                    ClockifyId = task.AssignedUser.ClockifyId
+                },
+                message = "Task saved locally and synced to Clockify." 
+            });
         }
 
         [HttpGet]
@@ -60,7 +82,7 @@ namespace EnozomTask.Controllers
         {
             var tasks = await _unitOfWork.TaskItems.GetAllAsync();
             var result = _mapper.Map<IEnumerable<TaskItemReadDto>>(tasks);
-            return Ok(result);
+            return Ok(new { tasks = result });
         }
 
         [HttpGet("{id}")]
@@ -69,7 +91,13 @@ namespace EnozomTask.Controllers
             var task = await _unitOfWork.TaskItems.GetByIdAsync(id);
             if (task == null) return NotFound();
             var result = _mapper.Map<TaskItemReadDto>(task);
-            return Ok(result);
+            var assignee = task.AssignedUser != null ? new AssigneeDto
+            {
+                UserId = task.AssignedUser.UserId,
+                FullName = task.AssignedUser.FullName,
+                ClockifyId = task.AssignedUser.ClockifyId
+            } : null;
+            return Ok(new { task = result, assignee });
         }
 
         [HttpPut("{id}")]

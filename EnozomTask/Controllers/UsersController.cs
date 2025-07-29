@@ -65,16 +65,36 @@ namespace EnozomTask.Controllers
         }
 
         [HttpPut("{userId}/clockify-id")]
-        public async Task<IActionResult> UpdateClockifyId(int userId, [FromBody] string clockifyId)
+        public async Task<IActionResult> UpdateClockifyId(int userId, [FromBody] UpdateClockifyIdDto dto)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
             if (user == null) return NotFound();
             
-            user.ClockifyId = clockifyId;
+            user.ClockifyId = dto.ClockifyId;
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
             
             return Ok(_mapper.Map<UserReadDto>(user));
+        }
+
+        [HttpGet("clockify")]
+        public async Task<IActionResult> GetClockifyUsers()
+        {
+            try
+            {
+                var clockifyUsers = await _clockifySyncService.GetClockifyUsersAsync();
+                return Ok(new { 
+                    message = "Clockify users retrieved successfully",
+                    users = clockifyUsers 
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { 
+                    message = "Failed to retrieve Clockify users", 
+                    error = ex.Message 
+                });
+            }
         }
 
         [HttpDelete("{id}")]
