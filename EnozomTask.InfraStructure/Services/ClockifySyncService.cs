@@ -5,7 +5,7 @@ using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
 using Microsoft.Extensions.Configuration;
 
-namespace EnozomTask.InfraStructure.Repositories
+namespace EnozomTask.InfraStructure.Services
 {
     public class ClockifySyncService : IClockifySyncService
     {

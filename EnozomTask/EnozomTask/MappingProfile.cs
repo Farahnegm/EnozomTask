@@ -12,7 +12,8 @@ namespace EnozomTask
             CreateMap<User, UserReadDto>();
             CreateMap<TaskItem, TaskItemReadDto>()
                 .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project != null ? src.Project.Name : "N/A"))
-                .ForMember(dest => dest.AssignedUserName, opt => opt.MapFrom(src => src.AssignedUser != null ? src.AssignedUser.FullName : "N/A"));
+                .ForMember(dest => dest.AssignedUserName, opt => opt.MapFrom(src => src.AssignedUser != null ? src.AssignedUser.FullName : "N/A"))
+                .ForMember(dest => dest.AssignedUserClockifyId, opt => opt.MapFrom(src => src.AssignedUser != null ? src.AssignedUser.ClockifyId : null));
             CreateMap<TimeEntry, TimeEntryReadDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "N/A"))
                 .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project != null ? src.Project.Name : "N/A"))

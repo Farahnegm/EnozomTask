@@ -11,7 +11,7 @@ using EnozomTask.InfraStructure.persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace EnozomTask.InfraStructure.Repositories
+namespace EnozomTask.InfraStructure.Services
 {
     public class ReportService : IReportService
     {

@@ -4,7 +4,7 @@ using EnozomTask.Application.Services;
 using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
 
-namespace EnozomTask.InfraStructure.Repositories
+namespace EnozomTask.InfraStructure.Services
 {
     public class TimeEntryOrchestrationService : ITimeEntryOrchestrationService
     {

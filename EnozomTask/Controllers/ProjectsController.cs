@@ -58,11 +58,24 @@ namespace EnozomTask.Controllers
                     missingClockifyUsers.Add(user.UserId);
                     continue;
                 }
-               
+                // Save assignment in local DB (e.g., add to join table if you have one)
                 assignedUsers.Add(user);
             }
             await _unitOfWork.SaveChangesAsync();
-            return Ok(new { projectId, assignedUsers = assignedUsers.Select(u => u.UserId), missingClockifyUsers, message = missingClockifyUsers.Any() ? "Some users are not in Clockify. Please invite them and update their ClockifyId." : null });
+            
+            var assignees = assignedUsers.Select(u => new AssigneeDto
+            {
+                UserId = u.UserId,
+                FullName = u.FullName,
+                ClockifyId = u.ClockifyId
+            }).ToList();
+            
+            return Ok(new { 
+                projectId, 
+                assignees,
+                missingClockifyUsers, 
+                message = missingClockifyUsers.Any() ? "Some users are not in Clockify. Please invite them and update their ClockifyId." : null 
+            });
         }
 
         [HttpGet]
