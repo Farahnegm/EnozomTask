@@ -5,6 +5,8 @@ using EnozomTask.Application.DTOs;
 using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
 using EnozomTask.Application.Services;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EnozomTask.Controllers
 {
@@ -38,6 +40,29 @@ namespace EnozomTask.Controllers
             }
             var result = _mapper.Map<ProjectReadDto>(project);
             return Ok(result);
+        }
+
+        [HttpPost("{projectId}/assign-users")]
+        public async Task<IActionResult> AssignUsers(int projectId, [FromBody] List<int> userIds)
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            if (project == null) return NotFound();
+            var assignedUsers = new List<User>();
+            var missingClockifyUsers = new List<int>();
+            foreach (var userId in userIds)
+            {
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                if (user == null) continue;
+                if (string.IsNullOrEmpty(user.ClockifyId))
+                {
+                    missingClockifyUsers.Add(user.UserId);
+                    continue;
+                }
+               
+                assignedUsers.Add(user);
+            }
+            await _unitOfWork.SaveChangesAsync();
+            return Ok(new { projectId, assignedUsers = assignedUsers.Select(u => u.UserId), missingClockifyUsers, message = missingClockifyUsers.Any() ? "Some users are not in Clockify. Please invite them and update their ClockifyId." : null });
         }
 
         [HttpGet]

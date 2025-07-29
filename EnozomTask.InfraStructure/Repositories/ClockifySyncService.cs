@@ -30,8 +30,12 @@ namespace EnozomTask.InfraStructure.Repositories
         public async Task<string> SyncTaskItemAsync(TaskItem taskItem)
         {
             var projectClockifyId = taskItem.Project?.ClockifyId;
+            var assignedUserName = taskItem.AssignedUser?.FullName;
             if (string.IsNullOrEmpty(projectClockifyId)) return null;
-            var payload = new { name = taskItem.Name };
+            var nameWithAssignee = !string.IsNullOrEmpty(assignedUserName)
+                ? $"{taskItem.Name} (Assigned to: {assignedUserName})"
+                : taskItem.Name;
+            var payload = new { name = nameWithAssignee };
             var response = await _httpClient.PostAsJsonAsync($"https://api.clockify.me/api/v1/workspaces/{_workspaceId}/projects/{projectClockifyId}/tasks", payload);
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<ClockifyTaskResponse>();

@@ -30,7 +30,10 @@ namespace EnozomTask.Controllers
             await _unitOfWork.SaveChangesAsync();
             // Removed call to _clockifySyncService.SyncUserAsync(user) as user creation is not supported
             var result = _mapper.Map<UserReadDto>(user);
-            return Ok(result);
+            return Ok(new { 
+                user = result,
+                instructions = "Please invite this user to Clockify workspace and update their ClockifyId using the PUT /api/Users/{userId}/clockify-id endpoint."
+            });
         }
 
         [HttpGet]
@@ -59,6 +62,19 @@ namespace EnozomTask.Controllers
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
             return Ok(user);
+        }
+
+        [HttpPut("{userId}/clockify-id")]
+        public async Task<IActionResult> UpdateClockifyId(int userId, [FromBody] string clockifyId)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) return NotFound();
+            
+            user.ClockifyId = clockifyId;
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return Ok(_mapper.Map<UserReadDto>(user));
         }
 
         [HttpDelete("{id}")]
