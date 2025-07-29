@@ -3,8 +3,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using EnozomTask.InfraStructure.persistence;
-using EnozomTask.Application.Services;
 using EnozomTask.Application.DTOs;
+using EnozomTask.Application.Interfaces.Services;
 
 namespace EnozomTask.Controllers
 {

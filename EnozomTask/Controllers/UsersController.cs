@@ -4,7 +4,8 @@ using AutoMapper;
 using EnozomTask.Application.DTOs;
 using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
-using EnozomTask.Application.Services;
+using EnozomTask.InfraStructure.Services;
+using EnozomTask.Application.Interfaces.Services;
 
 namespace EnozomTask.Controllers
 {
@@ -28,7 +29,6 @@ namespace EnozomTask.Controllers
             var user = new User { FullName = dto.FullName };
             _unitOfWork.Users.Add(user);
             await _unitOfWork.SaveChangesAsync();
-            // Removed call to _clockifySyncService.SyncUserAsync(user) as user creation is not supported
             var result = _mapper.Map<UserReadDto>(user);
             return Ok(new { 
                 user = result,

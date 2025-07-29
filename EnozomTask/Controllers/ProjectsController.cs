@@ -4,9 +4,10 @@ using AutoMapper;
 using EnozomTask.Application.DTOs;
 using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
-using EnozomTask.Application.Services;
+using EnozomTask.InfraStructure.Services;
 using System.Collections.Generic;
 using System.Linq;
+using EnozomTask.Application.Interfaces.Services;
 
 namespace EnozomTask.Controllers
 {
@@ -30,7 +31,6 @@ namespace EnozomTask.Controllers
             var project = new Project { Name = dto.Name };
             _unitOfWork.Projects.Add(project);
             await _unitOfWork.SaveChangesAsync();
-            // Sync to Clockify
             var clockifyId = await _clockifySyncService.SyncProjectAsync(project);
             if (!string.IsNullOrEmpty(clockifyId))
             {
@@ -47,20 +47,46 @@ namespace EnozomTask.Controllers
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
             if (project == null) return NotFound();
+            
+            if (string.IsNullOrEmpty(project.ClockifyId))
+            {
+                return BadRequest(new { message = "Project is not synced to Clockify. Please sync the project first." });
+            }
+            
             var assignedUsers = new List<User>();
             var missingClockifyUsers = new List<int>();
+            var invalidClockifyIds = new List<int>();
+            
             foreach (var userId in userIds)
             {
                 var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null) continue;
+                
                 if (string.IsNullOrEmpty(user.ClockifyId))
                 {
                     missingClockifyUsers.Add(user.UserId);
                     continue;
                 }
-                // Save assignment in local DB (e.g., add to join table if you have one)
+                
+                bool isValidClockifyId = user.ClockifyId.Length == 24 && 
+                                       System.Text.RegularExpressions.Regex.IsMatch(user.ClockifyId, "^[0-9a-fA-F]{24}$");
+                
+                if (!isValidClockifyId)
+                {
+                    invalidClockifyIds.Add(user.UserId);
+                    continue;
+                }
+                
                 assignedUsers.Add(user);
             }
+            
+            bool clockifySyncSuccess = false;
+            if (assignedUsers.Any())
+            {
+                var userClockifyIds = assignedUsers.Select(u => u.ClockifyId).ToList();
+                clockifySyncSuccess = await _clockifySyncService.AssignUsersToProjectAsync(project.ClockifyId, userClockifyIds);
+            }
+            
             await _unitOfWork.SaveChangesAsync();
             
             var assignees = assignedUsers.Select(u => new AssigneeDto
@@ -70,11 +96,28 @@ namespace EnozomTask.Controllers
                 ClockifyId = u.ClockifyId
             }).ToList();
             
+            var messages = new List<string>();
+            if (missingClockifyUsers.Any())
+            {
+                messages.Add($"Users {string.Join(", ", missingClockifyUsers)} are not in Clockify. Please invite them and update their ClockifyId.");
+            }
+            if (invalidClockifyIds.Any())
+            {
+                messages.Add($"Users {string.Join(", ", invalidClockifyIds)} have invalid ClockifyId format. Please update with valid 24-character hex IDs.");
+            }
+            if (clockifySyncSuccess && assignedUsers.Any())
+            {
+                messages.Add("Users validated in Clockify workspace. Note: Project access must be managed through Clockify web interface.");
+            }
+            
             return Ok(new { 
                 projectId, 
+                projectName = project.Name,
                 assignees,
                 missingClockifyUsers, 
-                message = missingClockifyUsers.Any() ? "Some users are not in Clockify. Please invite them and update their ClockifyId." : null 
+                invalidClockifyIds,
+                clockifySyncSuccess,
+                message = string.Join(" ", messages)
             });
         }
 

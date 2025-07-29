@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using EnozomTask.Application.DTOs;
-using EnozomTask.Application.Services;
+using EnozomTask.InfraStructure.Services;
 using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
 using AutoMapper;
 using System.Collections.Generic;
+using EnozomTask.Application.Interfaces.Services;
 
 namespace EnozomTask.Controllers
 {
@@ -37,7 +38,6 @@ namespace EnozomTask.Controllers
             };
             _unitOfWork.TimeEntries.Add(timeEntry);
             await _unitOfWork.SaveChangesAsync();
-            // Load related project and task for Clockify sync
             timeEntry.Project = await _unitOfWork.Projects.GetByIdAsync(timeEntry.ProjectId);
             timeEntry.TaskItem = await _unitOfWork.TaskItems.GetByIdAsync(timeEntry.TaskItemId);
             var clockifyId = await _clockifySyncService.SyncTimeEntryAsync(timeEntry);

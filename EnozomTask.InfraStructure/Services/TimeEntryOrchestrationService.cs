@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using EnozomTask.Application.DTOs;
-using EnozomTask.Application.Services;
+using EnozomTask.Application.Interfaces.Services;
 using EnozomTask.Domain.Entities;
 using EnozomTask.Domain.Repositories;
 
@@ -16,7 +16,6 @@ namespace EnozomTask.InfraStructure.Services
 
         public async Task HandleTimeEntryAsync(TimeEntryCreateDto dto)
         {
-            // User
             var user = await _unitOfWork.Users.GetByFullNameAsync(dto.UserFullName);
             if (user == null)
             {
@@ -24,7 +23,6 @@ namespace EnozomTask.InfraStructure.Services
                 _unitOfWork.Users.Add(user);
             }
 
-            // Project
             var project = await _unitOfWork.Projects.GetByNameAsync(dto.ProjectName);
             if (project == null)
             {
@@ -32,7 +30,6 @@ namespace EnozomTask.InfraStructure.Services
                 _unitOfWork.Projects.Add(project);
             }
 
-            // Task
             var task = await _unitOfWork.TaskItems.GetByNameAndProjectIdAsync(dto.TaskName, project?.Id ?? 0);
             if (task == null)
             {
@@ -40,7 +37,6 @@ namespace EnozomTask.InfraStructure.Services
                 _unitOfWork.TaskItems.Add(task);
             }
 
-            // TimeEntry
             var timeEntry = new TimeEntry
             {
                 User = user,
@@ -51,7 +47,6 @@ namespace EnozomTask.InfraStructure.Services
             };
             _unitOfWork.TimeEntries.Add(timeEntry);
 
-            // Save all changes in one transaction
             await _unitOfWork.SaveChangesAsync();
         }
     }

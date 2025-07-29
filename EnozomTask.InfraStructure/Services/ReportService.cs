@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using EnozomTask.Application.DTOs;
-using EnozomTask.Application.Services;
+using EnozomTask.Application.Interfaces.Services;
 using EnozomTask.InfraStructure.persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -1,26 +1,27 @@
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
+using EnozomTask.Domain.Interfaces.Strategies;
 using EnozomTask.Domain.Entities;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Linq;
-using EnozomTask.Application.Interfaces.Services;
 
-namespace EnozomTask.InfraStructure.Services
+namespace EnozomTask.InfraStructure.Strategies
 {
-    public class ClockifySyncService : IClockifySyncService
+    public class ClockifySyncStrategy : ISyncStrategy
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
         private readonly string _workspaceId;
-        public ClockifySyncService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+
+        public string ProviderName => "Clockify";
+
+        public ClockifySyncStrategy(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClient = httpClientFactory.CreateClient();
             _apiKey = configuration["Clockify:ApiKey"];
             _workspaceId = configuration["Clockify:WorkspaceId"];
             _httpClient.DefaultRequestHeaders.Add("X-Api-Key", _apiKey);
         }
+
         public async Task<string> SyncProjectAsync(Project project)
         {
             var payload = new { name = project.Name };
@@ -29,6 +30,7 @@ namespace EnozomTask.InfraStructure.Services
             var result = await response.Content.ReadFromJsonAsync<ClockifyProjectResponse>();
             return result.id;
         }
+
         public async Task<string> SyncTaskItemAsync(TaskItem taskItem)
         {
             var projectClockifyId = taskItem.Project?.ClockifyId;
@@ -77,6 +79,7 @@ namespace EnozomTask.InfraStructure.Services
             var result = await response.Content.ReadFromJsonAsync<ClockifyTaskResponse>();
             return result.id;
         }
+
         public async Task<string> SyncTimeEntryAsync(TimeEntry timeEntry)
         {
             var projectClockifyId = timeEntry.Project?.ClockifyId;
@@ -94,20 +97,7 @@ namespace EnozomTask.InfraStructure.Services
             var result = await response.Content.ReadFromJsonAsync<ClockifyTimeEntryResponse>();
             return result.id;
         }
-        
-        public async Task<List<ClockifyUser>> GetClockifyUsersAsync()
-        {
-            var response = await _httpClient.GetAsync($"https://api.clockify.me/api/v1/workspaces/{_workspaceId}/users");
-            response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadFromJsonAsync<List<ClockifyUserResponse>>();
-            return result?.Select(u => new ClockifyUser 
-            { 
-                Id = u.id, 
-                Name = u.name, 
-                Email = u.email 
-            }).ToList() ?? new List<ClockifyUser>();
-        }
-        
+
         public async Task<bool> AssignUsersToProjectAsync(string projectClockifyId, List<string> userClockifyIds)
         {
             if (string.IsNullOrEmpty(projectClockifyId) || !userClockifyIds.Any())
@@ -115,7 +105,7 @@ namespace EnozomTask.InfraStructure.Services
                 
             try
             {
-                var workspaceUsers = await GetClockifyUsersAsync();
+                var workspaceUsers = await GetUsersAsync();
                 var validUserIds = workspaceUsers.Select(u => u.Id).ToList();
                 var invalidUserIds = userClockifyIds.Where(id => !validUserIds.Contains(id)).ToList();
                 
@@ -132,6 +122,19 @@ namespace EnozomTask.InfraStructure.Services
                 System.Diagnostics.Debug.WriteLine($"Error assigning users to project: {ex.Message}");
                 return false;
             }
+        }
+
+        public async Task<List<ExternalUser>> GetUsersAsync()
+        {
+            var response = await _httpClient.GetAsync($"https://api.clockify.me/api/v1/workspaces/{_workspaceId}/users");
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<ClockifyUserResponse>>();
+            return result?.Select(u => new ExternalUser 
+            { 
+                Id = u.id, 
+                Name = u.name, 
+                Email = u.email 
+            }).ToList() ?? new List<ExternalUser>();
         }
         
         private class ClockifyProjectResponse { public string id { get; set; } }

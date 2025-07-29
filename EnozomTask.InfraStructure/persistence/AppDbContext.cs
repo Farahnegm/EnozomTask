@@ -21,28 +21,25 @@ namespace EnozomTask.InfraStructure.persistence
                 .HasMany(p => p.Tasks)
                 .WithOne(t => t.Project)
                 .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade); // keep cascade here
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Project -> TimeEntries
             modelBuilder.Entity<Project>()
                 .HasMany(p => p.TimeEntries)
                 .WithOne(te => te.Project)
                 .HasForeignKey(te => te.ProjectId)
-                .OnDelete(DeleteBehavior.Restrict); // fix
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // TaskItem -> TimeEntries
             modelBuilder.Entity<TaskItem>()
                 .HasMany(t => t.TimeEntries)
                 .WithOne(te => te.TaskItem)
                 .HasForeignKey(te => te.TaskItemId)
-                .OnDelete(DeleteBehavior.Restrict); // fix
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // User -> TimeEntries
             modelBuilder.Entity<User>()
                 .HasMany(u => u.TimeEntries)
                 .WithOne(te => te.User)
                 .HasForeignKey(te => te.UserId)
-                .OnDelete(DeleteBehavior.Restrict); // fix
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
     }
